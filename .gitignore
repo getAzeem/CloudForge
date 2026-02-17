@@ -1,0 +1,5 @@
+aws/
+aws-cred/
+awscliv2.zip
+terraform_accessKeys.csv
+terraform_credentials.csv
