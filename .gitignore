@@ -9,3 +9,6 @@ terraform.tfvars
 
 # Terraform backend config (differs per environment)
 backend.tf
+
+# Terraform local directory
+.terraform/

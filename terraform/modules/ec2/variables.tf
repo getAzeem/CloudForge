@@ -46,6 +46,7 @@ variable "volume_type" {
 variable "associate_public_ip" {
   description = "Whether to assign public IP (use for public subnets only)"
   type        = bool
+  default = true
 }
 
 variable "user_data" {
