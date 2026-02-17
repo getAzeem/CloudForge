@@ -1,0 +1,9 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: cartservice-config
+  namespace: cartservice
+data:
+  REDIS_ADDR: redis-cart.redis.svc.cluster.local:6379
+  PORT: "7070"
+  SERVICE_NAME: cartservice

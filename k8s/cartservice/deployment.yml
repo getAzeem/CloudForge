@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cartservice
+  namespace: cartservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cartservice
+  template:
+    metadata:
+      labels:
+        app: cartservice
+    spec:
+      containers:
+        - name: cartservice
+          image: myselfazeem/cartservice:v1
+          ports:
+            - containerPort: 7070
+              name: grpc
+          envFrom:
+            - configMapRef:
+                name: cartservice-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          livenessProbe:
+            tcpSocket:
+              port: 7070
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 7070
+            initialDelaySeconds: 5
+            periodSeconds: 10
