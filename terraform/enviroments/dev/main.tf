@@ -10,3 +10,67 @@ module "vpc" {
     Project     = "k8s-cluster"
   }
 }
+
+module "public-subnet" {
+  source            = "../../modules/public-subnet"
+  name              = var.vpc_name
+  vpc_id            = module.vpc.vpc_id
+  cidr_block        = var.public_subnets[0]
+  availability_zone = var.azs[0]
+
+}
+
+module "public-route-table" {
+  source = "../../modules/public-route-table"
+  name = var.vpc_name
+  vpc_id = module.vpc.vpc_id
+  internet_gateway_id = module.vpc.internet_gateway_id
+  public_subnet_id = module.public-subnet.subnet_id
+
+}
+
+
+module "nacl-public" {
+  source = "../../modules/nacl-public"
+  name = var.vpc_name
+  vpc_id = module.vpc.vpc_id
+  public_subnet_id = module.public-subnet.subnet_id
+}
+
+
+module "sg-public" {
+  source = "../../modules/sg-public"
+  name = var.vpc_name
+  vpc_id = module.vpc.vpc_id
+}
+
+module "master-node" {
+  source = "../../modules/ec2"
+  name = "master-node"
+  subnet_id = module.public-subnet.subnet_id
+  key_name = "k8s"
+  associate_public_ip = true
+  security_group_ids = [module.sg-public.security_group_id]
+
+}
+
+module "worker-node-1" {
+  source = "../../modules/ec2"
+  name = "worker-node-1"
+  subnet_id = module.public-subnet.subnet_id
+  key_name = "k8s"
+  associate_public_ip = true
+  security_group_ids = [module.sg-public.security_group_id]
+
+}
+
+module "worker-node-2" {
+  source = "../../modules/ec2"
+  name = "worker-node-2"
+  subnet_id = module.public-subnet.subnet_id
+  key_name = "k8s"
+  associate_public_ip = true
+  security_group_ids = [module.sg-public.security_group_id]
+
+}
+
