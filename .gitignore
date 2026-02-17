@@ -3,3 +3,9 @@ aws-cred/
 awscliv2.zip
 terraform_accessKeys.csv
 terraform_credentials.csv
+
+# Terraform variable files (env-specific, sensitive)
+terraform.tfvars
+
+# Terraform backend config (differs per environment)
+backend.tf
