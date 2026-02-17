@@ -12,7 +12,7 @@ variable "ami_id" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t4g.micro"  # Free Tier eligible
+  default     = "m7i-flex.large"  # Free Tier eligible
 }
 
 variable "subnet_id" {

@@ -23,3 +23,9 @@ variable "azs" {
   type        = list(string)
 }
 
+variable "ami_id" {
+  description = "AMI ID for the instance"
+  type        = string
+  default     = "ami-0b6c6ebed2801a5cb"  # Ubuntu 22.04 in ap-south-1 (Free Tier eligible)
+}
+

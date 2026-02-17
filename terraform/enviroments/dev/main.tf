@@ -46,31 +46,56 @@ module "sg-public" {
 
 module "master-node" {
   source = "../../modules/ec2"
-  name = "master-node"
-  subnet_id = module.public-subnet.subnet_id
-  key_name = "k8s"
-  associate_public_ip = true
-  security_group_ids = [module.sg-public.security_group_id]
 
+  name               = "master-node"
+  ami_id             = var.ami_id
+  instance_type      = "m7i-flex.large"
+
+  subnet_id          = module.public-subnet.subnet_id
+  security_group_ids = [module.sg-public.security_group_id]
+  key_name           = "k8s"
+  associate_public_ip = true
 }
 
 module "worker-node-1" {
   source = "../../modules/ec2"
-  name = "worker-node-1"
-  subnet_id = module.public-subnet.subnet_id
-  key_name = "k8s"
-  associate_public_ip = true
-  security_group_ids = [module.sg-public.security_group_id]
 
+  name               = "worker-node-1"
+  ami_id             = var.ami_id
+  instance_type      = "m7i-flex.large"
+
+  subnet_id          = module.public-subnet.subnet_id
+  security_group_ids = [module.sg-public.security_group_id]
+  key_name           = "k8s"
+  associate_public_ip = true
 }
+
 
 module "worker-node-2" {
   source = "../../modules/ec2"
-  name = "worker-node-2"
-  subnet_id = module.public-subnet.subnet_id
-  key_name = "k8s"
-  associate_public_ip = true
-  security_group_ids = [module.sg-public.security_group_id]
 
+  name               = "worker-node-2"
+  ami_id             = var.ami_id
+  instance_type      = "m7i-flex.large"
+
+  subnet_id          = module.public-subnet.subnet_id
+  security_group_ids = [module.sg-public.security_group_id]
+  key_name           = "k8s"
+  associate_public_ip = true
 }
+
+
+module "Jenkins-worker" {
+  source = "../../modules/ec2"
+
+  name               = "Jenkins-worker"
+  ami_id             = var.ami_id
+  instance_type      = "m7i-flex.large"
+
+  subnet_id          = module.public-subnet.subnet_id
+  security_group_ids = [module.sg-public.security_group_id]
+  key_name           = "k8s"
+  associate_public_ip = true
+}
+
 
