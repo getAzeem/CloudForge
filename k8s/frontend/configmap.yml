@@ -1,0 +1,11 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: frontend-config
+  namespace: frontend
+data:
+  PORT: "8080"
+  PRODUCT_CATALOG_SERVICE_ADDR: productcatalogservice.productcatalog.svc.cluster.local:3550
+  CART_SERVICE_ADDR: cartservice.cartservice.svc.cluster.local:7070
+
+
