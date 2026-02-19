@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recommendation-config
+  namespace: recommendation
+data:
+  PORT: "8080"
+  PRODUCT_CATALOG_SERVICE_ADDR: productcatalogservice.productcatalog.svc.cluster.local:3550
+  SERVICE_NAME: recommendationservice

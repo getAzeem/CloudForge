@@ -1,0 +1,6 @@
+iapiVersion: v1
+kind: Namespace
+metadata:
+  name: recommendation
+  labels:
+    app: recommendationservice
