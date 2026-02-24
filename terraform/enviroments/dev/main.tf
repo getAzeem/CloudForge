@@ -68,6 +68,9 @@ module "worker-node-1" {
   security_group_ids = [module.sg-public.security_group_id]
   key_name           = "k8s"
   associate_public_ip = true
+
+  volume_size = 20
+  volume_type = "gp3"
 }
 
 
@@ -82,6 +85,9 @@ module "worker-node-2" {
   security_group_ids = [module.sg-public.security_group_id]
   key_name           = "k8s"
   associate_public_ip = true
+
+  volume_size = 20
+  volume_type = "gp3"
 }
 
 

@@ -66,6 +66,15 @@ ingress {
   self        = true
 }
 
+# Allow Kubernetes NodePort range
+ingress {
+  description = "Kubernetes NodePort range"
+  from_port   = 30000
+  to_port     = 32767
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
   # Allow all outbound traffic
   egress {
     description = "Allow all outbound"
