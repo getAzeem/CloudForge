@@ -5,4 +5,5 @@ metadata:
   namespace: payment
 data:
   PORT: "50051"
-  SERVICE_NAME: paymentservice
+  SERVICE_NAME: "paymentservice"
+  DISABLE_PROFILER: "true"

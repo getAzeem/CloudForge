@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: checkout-config
+  namespace: checkout
+data:
+  PORT: "5050"
+  PRODUCT_CATALOG_SERVICE_ADDR: productcatalogservice.productcatalog.svc.cluster.local:3550
+  SHIPPING_SERVICE_ADDR: shippingservice.shipping.svc.cluster.local:50051
+  PAYMENT_SERVICE_ADDR: paymentservice.payment.svc.cluster.local:50051
+  EMAIL_SERVICE_ADDR: emailservice.email.svc.cluster.local:8080
+  CURRENCY_SERVICE_ADDR: currencyservice.currency.svc.cluster.local:7000
+  CART_SERVICE_ADDR: cartservice.cartservice.svc.cluster.local:7070
