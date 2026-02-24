@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: email-config
+  namespace: email
+data:
+  PORT: "8080"
+  SERVICE_NAME: emailservice

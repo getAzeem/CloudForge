@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adservice
+  namespace: ad
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adservice
+  template:
+    metadata:
+      labels:
+        app: adservice
+    spec:
+      containers:
+        - name: adservice
+          image: myselfazeem/adservice:v1
+          ports:
+            - containerPort: 9555
+              name: grpc
+          envFrom:
+            - configMapRef:
+                name: ad-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          livenessProbe:
+            tcpSocket:
+              port: 9555
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 9555
+            initialDelaySeconds: 5
+            periodSeconds: 10

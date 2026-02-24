@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice
+  namespace: payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paymentservice
+  template:
+    metadata:
+      labels:
+        app: paymentservice
+    spec:
+      containers:
+        - name: paymentservice
+          image: myselfazeem/paymentservice:v1
+          ports:
+            - containerPort: 50051
+              name: grpc
+          envFrom:
+            - configMapRef:
+                name: payment-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          livenessProbe:
+            tcpSocket:
+              port: 50051
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 50051
+            initialDelaySeconds: 5
+            periodSeconds: 10
