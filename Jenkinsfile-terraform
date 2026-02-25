@@ -1,0 +1,82 @@
+pipeline {
+
+    agent any
+
+    environment {
+        TF_DIR = "terraform/enviroments/dev"
+    }
+
+    options {
+        timestamps()
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh '''
+                    terraform init -upgrade
+                    '''
+                }
+            }
+        }
+
+        stage('Terraform Format Check') {
+            steps {
+                sh '''
+                terraform fmt -check -recursive terraform/
+                '''
+            }
+        }
+
+        stage('Terraform Validate') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh '''
+                    terraform validate
+                    '''
+                }
+            }
+        }
+
+        stage('tfsec Security Scan') {
+            steps {
+                sh '''
+                tfsec terraform/
+                '''
+            }
+        }
+
+        stage('Checkov Security Scan') {
+            steps {
+                sh '''
+                checkov -d terraform/
+                '''
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh '''
+                    terraform plan -out=tfplan
+                    '''
+                }
+            }
+        }
+
+        stage('Archive Plan') {
+            steps {
+                archiveArtifacts artifacts: 'terraform/enviroments/dev/tfplan'
+            }
+        }
+
+    }
+}
