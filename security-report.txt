@@ -1,0 +1,9 @@
+CloudForge Terraform Security Report
+------------------------------------
+
+CRITICAL: 9
+HIGH: 3
+MEDIUM: 2
+LOW: 14
+
+Security issues detected.
