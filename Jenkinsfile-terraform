@@ -4,7 +4,8 @@ pipeline {
 
     environment {
         TF_DIR = "terraform/enviroments/dev"
-        GIT_BRANCH_NAME = "main"
+        GIT_BRANCH = "main"
+        GIT_REPO = "https://github.com/getAzeem/CloudForge.git"
     }
 
     options {
@@ -19,6 +20,32 @@ pipeline {
             }
         }
 
+        stage('Prepare Git Branch') {
+            steps {
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'Jenkins-access-github',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )
+                ]) {
+
+                    sh '''
+
+                    git fetch https://${GIT_USER}:${GIT_TOKEN}@github.com/getAzeem/CloudForge.git
+
+                    git checkout -B ${GIT_BRANCH}
+
+                    git reset --hard origin/${GIT_BRANCH}
+
+                    '''
+
+                }
+
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 dir("${TF_DIR}") {
@@ -29,6 +56,7 @@ pipeline {
 
         stage('Terraform Format Auto Fix') {
             steps {
+
                 script {
 
                     def status = sh(
@@ -40,31 +68,37 @@ pipeline {
 
                         echo "Formatting issues found. Fixing..."
 
-                        sh '''
+                        withCredentials([
+                            usernamePassword(
+                                credentialsId: 'Jenkins-access-github',
+                                usernameVariable: 'GIT_USER',
+                                passwordVariable: 'GIT_TOKEN'
+                            )
+                        ]) {
 
-                        terraform fmt -recursive terraform/
+                            sh '''
 
-                        git config user.email "jenkins@cloudforge.com"
-                        git config user.name "Jenkins"
+                            terraform fmt -recursive terraform/
 
-                        # Fix detached HEAD problem
-                        git checkout ${GIT_BRANCH_NAME}
+                            git config user.email "jenkins@cloudforge.com"
+                            git config user.name "Jenkins"
 
-                        git pull origin ${GIT_BRANCH_NAME}
+                            git add terraform/
 
-                        git add terraform/
+                            git commit -m "Auto terraform fmt fix" || true
 
-                        git commit -m "Auto terraform fmt fix" || true
+                            git push https://${GIT_USER}:${GIT_TOKEN}@github.com/getAzeem/CloudForge.git ${GIT_BRANCH}
 
-                        git push origin ${GIT_BRANCH_NAME}
+                            '''
 
-                        '''
+                        }
 
                     } else {
 
                         echo "Terraform formatting OK"
 
                     }
+
                 }
             }
         }
@@ -104,5 +138,4 @@ pipeline {
         }
 
     }
-
 }
