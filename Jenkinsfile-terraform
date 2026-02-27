@@ -21,53 +21,103 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 dir("${TF_DIR}") {
-                    sh '''
-                    terraform init -upgrade
-                    '''
+                    sh 'terraform init -upgrade'
                 }
             }
         }
 
-        stage('Terraform Format Check') {
+        stage('Terraform Lockfile Update') {
             steps {
-                sh '''
-                terraform fmt -check -recursive terraform/
-                '''
+                script {
+
+                    sh '''
+                    git config user.email "jenkins@cloudforge.com"
+                    git config user.name "Jenkins"
+                    '''
+
+                    def changes = sh(
+                        script: "git status --porcelain",
+                        returnStdout: true
+                    ).trim()
+
+                    if (changes) {
+
+                        echo "Lockfile or terraform files changed. Pushing..."
+
+                        sh '''
+                        git add terraform/
+                        git commit -m "Auto update terraform lockfile" || true
+                        git push origin main
+                        '''
+
+                    } else {
+
+                        echo "No lockfile changes"
+
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Format Auto Fix') {
+            steps {
+                script {
+
+                    def status = sh(
+                        script: "terraform fmt -check -recursive terraform/",
+                        returnStatus: true
+                    )
+
+                    if (status != 0) {
+
+                        echo "Formatting issues found. Fixing..."
+
+                        sh '''
+                        terraform fmt -recursive terraform/
+
+                        git config user.email "jenkins@cloudforge.com"
+                        git config user.name "Jenkins"
+
+                        git add terraform/
+
+                        git commit -m "Auto terraform fmt fix" || true
+
+                        git push origin main
+                        '''
+
+                    } else {
+
+                        echo "Terraform formatting OK"
+
+                    }
+                }
             }
         }
 
         stage('Terraform Validate') {
             steps {
                 dir("${TF_DIR}") {
-                    sh '''
-                    terraform validate
-                    '''
+                    sh 'terraform validate'
                 }
             }
         }
 
         stage('tfsec Security Scan') {
             steps {
-                sh '''
-                tfsec terraform/
-                '''
+                sh 'tfsec terraform/'
             }
         }
 
         stage('Checkov Security Scan') {
             steps {
-                sh '''
-                checkov -d terraform/
-                '''
+                sh 'checkov -d terraform/'
             }
         }
 
         stage('Terraform Plan') {
             steps {
                 dir("${TF_DIR}") {
-                    sh '''
-                    terraform plan -out=tfplan
-                    '''
+                    sh 'terraform plan -out=tfplan'
                 }
             }
         }
