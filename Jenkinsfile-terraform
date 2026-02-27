@@ -3,9 +3,15 @@ pipeline {
     agent any
 
     environment {
+
         TF_DIR = "terraform/enviroments/dev"
         GIT_BRANCH = "main"
         GIT_REPO = "https://github.com/getAzeem/CloudForge.git"
+
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
+        AWS_DEFAULT_REGION = "ap-south-1"
+
     }
 
     options {
@@ -19,6 +25,7 @@ pipeline {
                 checkout scm
             }
         }
+
 
         stage('Prepare Git Branch') {
             steps {
@@ -46,6 +53,7 @@ pipeline {
             }
         }
 
+
         stage('Terraform Init') {
             steps {
                 dir("${TF_DIR}") {
@@ -53,6 +61,8 @@ pipeline {
                 }
             }
         }
+
+
 
         stage('Terraform Format Auto Fix') {
             steps {
@@ -103,6 +113,8 @@ pipeline {
             }
         }
 
+
+
         stage('Terraform Validate') {
             steps {
                 dir("${TF_DIR}") {
@@ -111,6 +123,8 @@ pipeline {
             }
         }
 
+
+
         stage('Security Scan + Report') {
             steps {
 
@@ -118,20 +132,24 @@ pipeline {
 
                     sh '''
 
-                    rm -f security-report.txt
+                    rm -f security-report.txt tfsec.txt checkov.txt
 
                     echo "CloudForge Terraform Security Report" >> security-report.txt
                     echo "------------------------------------" >> security-report.txt
                     echo "" >> security-report.txt
 
+                    echo "Running tfsec..."
                     tfsec terraform/ > tfsec.txt || true
 
+                    echo "Running Checkov..."
                     checkov -d terraform/ > checkov.txt || true
+
 
                     CRITICAL=$(grep -i "critical" tfsec.txt | wc -l)
                     HIGH=$(grep -i "high" tfsec.txt | wc -l)
                     MEDIUM=$(grep -i "medium" tfsec.txt | wc -l)
                     LOW=$(grep -i "low" tfsec.txt | wc -l)
+
 
                     echo "CRITICAL: $CRITICAL" >> security-report.txt
                     echo "HIGH: $HIGH" >> security-report.txt
@@ -139,19 +157,31 @@ pipeline {
                     echo "LOW: $LOW" >> security-report.txt
                     echo "" >> security-report.txt
 
+
                     if [ "$CRITICAL" -eq "0" ]; then
+
                         echo "Good to go." >> security-report.txt
+
                     else
+
                         echo "Security issues detected." >> security-report.txt
+
                     fi
 
+
+                    echo ""
+                    echo "=========== SECURITY SUMMARY =========="
                     cat security-report.txt
+                    echo "======================================="
 
                     '''
+
                 }
 
             }
         }
+
+
 
         stage('Push Security Report') {
             steps {
@@ -182,19 +212,36 @@ pipeline {
             }
         }
 
+
+
         stage('Terraform Plan') {
             steps {
+
                 dir("${TF_DIR}") {
-                    sh 'terraform plan -out=tfplan'
+
+                    sh '''
+
+                    terraform plan \
+                    -var-file=terraform.tfvars \
+                    -out=tfplan
+
+                    '''
+
                 }
+
             }
         }
 
+
+
         stage('Archive Plan') {
             steps {
+
                 archiveArtifacts artifacts: 'terraform/enviroments/dev/tfplan'
+
             }
         }
+
 
     }
 
