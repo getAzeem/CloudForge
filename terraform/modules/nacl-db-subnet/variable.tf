@@ -21,7 +21,7 @@ variable "public_subnet_cidr" {
 variable "my_ip" {
   description = "My IP for SSH access"
   type        = string
-  default     = "122.161.50.7/32"  # Change this to your actual IP!
+  default     = "122.161.50.7/32" # Change this to your actual IP!
 }
 
 variable "db_port" {

@@ -21,14 +21,14 @@ resource "aws_security_group" "backend" {
     cidr_blocks = [var.public_subnet_cidr]
   }
 
-#   # Allow SSH from my IP (direct access)
-#   ingress {
-#     description = "SSH from my IP"
-#     from_port   = 22
-#     to_port     = 22
-#     protocol    = "tcp"
-#     cidr_blocks = [var.my_ip]
-#   }
+  #   # Allow SSH from my IP (direct access)
+  #   ingress {
+  #     description = "SSH from my IP"
+  #     from_port   = 22
+  #     to_port     = 22
+  #     protocol    = "tcp"
+  #     cidr_blocks = [var.my_ip]
+  #   }
 
   # Allow internal communication between backend instances
   ingress {

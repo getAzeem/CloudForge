@@ -12,7 +12,7 @@ output "internet_gateway_id" {
 output "public_subnet_ids" {
   value = [
     module.public-subnet.subnet_id
-    
+
   ]
 }
 

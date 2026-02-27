@@ -6,13 +6,13 @@ variable "name" {
 variable "ami_id" {
   description = "AMI ID for the instance"
   type        = string
-  default     = "ami-0b9093ea00a0fed92"  # Ubuntu 22.04 in ap-south-1 (Free Tier eligible)
+  default     = "ami-0b9093ea00a0fed92" # Ubuntu 22.04 in ap-south-1 (Free Tier eligible)
 }
 
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "m7i-flex.large"  # Free Tier eligible
+  default     = "m7i-flex.large" # Free Tier eligible
 }
 
 variable "subnet_id" {
@@ -23,7 +23,7 @@ variable "subnet_id" {
 variable "security_group_ids" {
   description = "List of security group IDs"
   type        = list(string)
-  
+
 }
 
 variable "key_name" {
@@ -34,19 +34,19 @@ variable "key_name" {
 variable "volume_size" {
   description = "Root volume size in GB"
   type        = number
-  default     = 8  # Free Tier includes 30GB, but 8GB is minimum for Ubuntu
+  default     = 8 # Free Tier includes 30GB, but 8GB is minimum for Ubuntu
 }
 
 variable "volume_type" {
   description = "Root volume type"
   type        = string
-  default     = "gp2"  # Free Tier includes gp2
+  default     = "gp2" # Free Tier includes gp2
 }
 
 variable "associate_public_ip" {
   description = "Whether to assign public IP (use for public subnets only)"
   type        = bool
-  default = true
+  default     = true
 }
 
 variable "user_data" {

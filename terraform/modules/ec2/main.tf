@@ -4,7 +4,7 @@ resource "aws_instance" "main" {
   subnet_id              = var.subnet_id
   vpc_security_group_ids = var.security_group_ids
   key_name               = var.key_name
-  
+
   # Free tier optimized root volume
   root_block_device {
     volume_size = var.volume_size

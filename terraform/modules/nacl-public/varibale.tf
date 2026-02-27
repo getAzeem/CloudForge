@@ -17,5 +17,5 @@ variable "name" {
 variable "ssh_cidr_block" {
   description = "CIDR block allowed for SSH access"
   type        = string
-  default     = "0.0.0.0/0"  # Change to your IP for security
+  default     = "0.0.0.0/0" # Change to your IP for security
 }

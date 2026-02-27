@@ -22,11 +22,11 @@ variable "public_subnet_cidr" {
 variable "db_port" {
   description = "Database port"
   type        = number
-  default     = 27017  # MongoDB default port
+  default     = 27017 # MongoDB default port
 }
 
 variable "my_ip" {
   description = "My IP for direct SSH access"
   type        = string
-  default     = "0.0.0.0/0"  # Change to your actual IP!
+  default     = "0.0.0.0/0" # Change to your actual IP!
 }

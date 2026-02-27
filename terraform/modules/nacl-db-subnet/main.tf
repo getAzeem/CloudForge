@@ -1,9 +1,9 @@
 resource "aws_network_acl" "db" {
   vpc_id     = var.vpc_id
   subnet_ids = [var.db_subnet_id]
-  
+
   # INBOUND RULES
-  
+
   # Only allow database connections from backend
   ingress {
     protocol   = "tcp"
@@ -13,8 +13,8 @@ resource "aws_network_acl" "db" {
     from_port  = var.db_port
     to_port    = var.db_port
   }
-  
-    # SSH from public subnet (for bastion)
+
+  # SSH from public subnet (for bastion)
   ingress {
     protocol   = "tcp"
     rule_no    = 110
@@ -25,8 +25,8 @@ resource "aws_network_acl" "db" {
   }
 
 
-  
-   ingress {
+
+  ingress {
     protocol   = "tcp"
     rule_no    = 120
     action     = "allow"
@@ -44,9 +44,9 @@ resource "aws_network_acl" "db" {
     from_port  = 1024
     to_port    = 65535
   }
-  
+
   # OUTBOUND RULES
-  
+
   # Allow responses back to backend
   egress {
     protocol   = "tcp"
@@ -56,7 +56,7 @@ resource "aws_network_acl" "db" {
     from_port  = 0
     to_port    = 65535
   }
-  
+
   # Allow response traffic
   egress {
     protocol   = "tcp"

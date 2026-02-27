@@ -44,5 +44,5 @@ variable "name" {
 variable "my_ip" {
   description = "My personal IP for SSH access"
   type        = string
-  default     = "192.168.1.100/32"  # Change this to your actual IP
+  default     = "192.168.1.100/32" # Change this to your actual IP
 }

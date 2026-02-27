@@ -1,9 +1,9 @@
 resource "aws_network_acl" "public" {
   vpc_id     = var.vpc_id
   subnet_ids = [var.public_subnet_id]
-  
+
   # INGRESS RULES (Incoming traffic)
-  
+
   ingress {
     protocol   = "tcp"
     rule_no    = 100
@@ -12,7 +12,7 @@ resource "aws_network_acl" "public" {
     from_port  = 3000
     to_port    = 3000
   }
-  
+
   ingress {
     protocol   = "tcp"
     rule_no    = 110
@@ -21,7 +21,7 @@ resource "aws_network_acl" "public" {
     from_port  = 80
     to_port    = 80
   }
-  
+
   ingress {
     protocol   = "tcp"
     rule_no    = 120
@@ -30,7 +30,7 @@ resource "aws_network_acl" "public" {
     from_port  = 443
     to_port    = 443
   }
-  
+
   # SSH from my IP only
   ingress {
     protocol   = "tcp"
@@ -40,7 +40,7 @@ resource "aws_network_acl" "public" {
     from_port  = 22
     to_port    = 22
   }
-  
+
   # (important!)
   ingress {
     protocol   = "tcp"
@@ -50,7 +50,7 @@ resource "aws_network_acl" "public" {
     from_port  = 1024
     to_port    = 65535
   }
-  
+
   # Outgoing traffic
 
   egress {
