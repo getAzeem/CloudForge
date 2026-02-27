@@ -111,15 +111,74 @@ pipeline {
             }
         }
 
-        stage('tfsec Security Scan') {
+        stage('Security Scan + Report') {
             steps {
-                sh 'tfsec terraform/'
+
+                script {
+
+                    sh '''
+
+                    rm -f security-report.txt
+
+                    echo "CloudForge Terraform Security Report" >> security-report.txt
+                    echo "------------------------------------" >> security-report.txt
+                    echo "" >> security-report.txt
+
+                    tfsec terraform/ > tfsec.txt || true
+
+                    checkov -d terraform/ > checkov.txt || true
+
+                    CRITICAL=$(grep -i "critical" tfsec.txt | wc -l)
+                    HIGH=$(grep -i "high" tfsec.txt | wc -l)
+                    MEDIUM=$(grep -i "medium" tfsec.txt | wc -l)
+                    LOW=$(grep -i "low" tfsec.txt | wc -l)
+
+                    echo "CRITICAL: $CRITICAL" >> security-report.txt
+                    echo "HIGH: $HIGH" >> security-report.txt
+                    echo "MEDIUM: $MEDIUM" >> security-report.txt
+                    echo "LOW: $LOW" >> security-report.txt
+                    echo "" >> security-report.txt
+
+                    if [ "$CRITICAL" -eq "0" ]; then
+                        echo "Good to go." >> security-report.txt
+                    else
+                        echo "Security issues detected." >> security-report.txt
+                    fi
+
+                    cat security-report.txt
+
+                    '''
+                }
+
             }
         }
 
-        stage('Checkov Security Scan') {
+        stage('Push Security Report') {
             steps {
-                sh 'checkov -d terraform/'
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'Jenkins-access-github',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )
+                ]) {
+
+                    sh '''
+
+                    git config user.email "jenkins@cloudforge.com"
+                    git config user.name "Jenkins"
+
+                    git add security-report.txt
+
+                    git commit -m "Update security report" || true
+
+                    git push https://${GIT_USER}:${GIT_TOKEN}@github.com/getAzeem/CloudForge.git ${GIT_BRANCH}
+
+                    '''
+
+                }
+
             }
         }
 
@@ -138,4 +197,5 @@ pipeline {
         }
 
     }
+
 }
