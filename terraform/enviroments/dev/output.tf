@@ -94,3 +94,20 @@ output "worker_node_2_public_ip" {
   description = "Public IP address (if assigned)"
   value       = module.worker-node-2.public_ip
 }
+
+
+
+output "master_ip" {
+  value = module.master-node.public_ip
+}
+
+output "worker_ips" {
+  value = [
+    module.worker-node-1.public_ip,
+    module.worker-node-2.public_ip
+  ]
+}
+
+output "Proxy_server_ip" {
+  value = module.Jenkins-worker.public_ip
+}
