@@ -1,0 +1,187 @@
+pipeline {
+
+    agent any
+
+    environment {
+
+        GIT_BRANCH = "main"
+        GIT_REPO = "https://github.com/getAzeem/CloudForge.git"
+
+        ANSIBLE_DIR = "ansible"
+
+    }
+
+    options {
+        timestamps()
+    }
+
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+
+        stage('Prepare Git Branch') {
+
+            steps {
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'Jenkins-access-github',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )
+                ]) {
+
+                    sh '''
+
+                    git fetch https://${GIT_USER}:${GIT_TOKEN}@github.com/getAzeem/CloudForge.git
+
+                    git checkout -B ${GIT_BRANCH}
+
+                    git reset --hard origin/${GIT_BRANCH}
+
+                    '''
+
+                }
+            }
+        }
+
+
+
+        stage('Verify Ansible Structure') {
+
+            steps {
+
+                sh '''
+
+                echo "Checking Ansible structure..."
+
+                test -f ansible/playbooks/site.yml
+                test -f ansible/ansible.cfg
+                test -d ansible/roles
+                test -d ansible/scripts
+
+                echo "Structure OK"
+
+                '''
+
+            }
+        }
+
+
+
+        stage('Generate Inventory File') {
+
+            steps {
+
+                dir("${ANSIBLE_DIR}") {
+
+                    sh '''
+
+                    echo "Running inventory generator..."
+
+                    python3 scripts/generate_inventory.py || true
+
+                    echo "Inventory generated"
+
+                    '''
+
+                }
+            }
+        }
+
+
+
+        stage('Validate Inventory') {
+
+            steps {
+
+                sh '''
+
+                echo "Checking hosts.ini..."
+
+                cat ansible/inventories/production/hosts.ini
+
+                echo "Inventory OK"
+
+                '''
+
+            }
+        }
+
+
+
+        stage('Ansible Syntax Check') {
+
+            steps {
+
+                dir("${ANSIBLE_DIR}") {
+
+                    sh '''
+
+                    ansible-playbook playbooks/site.yml --syntax-check
+
+                    '''
+
+                }
+            }
+        }
+
+
+
+        stage('Ansible Dry Run') {
+
+            steps {
+
+                dir("${ANSIBLE_DIR}") {
+
+                    sh '''
+
+                    echo "Running Ansible dry-run..."
+
+                    ansible-playbook playbooks/site.yml --check || true
+
+                    '''
+
+                }
+            }
+        }
+
+
+
+        stage('Archive Inventory') {
+
+            steps {
+
+                archiveArtifacts artifacts: 'ansible/inventories/production/hosts.ini'
+
+            }
+        }
+
+
+    }
+
+
+
+    post {
+
+        success {
+
+            echo 'Ansible Pipeline Successful'
+
+        }
+
+        failure {
+
+            echo 'Ansible Pipeline Failed'
+
+        }
+
+    }
+
+}
