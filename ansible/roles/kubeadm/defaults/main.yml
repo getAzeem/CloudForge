@@ -1,0 +1,3 @@
+---
+# defaults for kubeadm role
+kube_version: "1.27.3-00"    # example pinned version, change as needed

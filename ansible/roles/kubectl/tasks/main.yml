@@ -1,0 +1,3 @@
+---
+# kubectl role only needs to ensure the kubeconfig is in place
+- import_tasks: kubeconfig.yml

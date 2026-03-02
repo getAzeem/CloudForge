@@ -1,0 +1,5 @@
+---
+- hosts: kubectl
+  become: yes
+  roles:
+    - verify

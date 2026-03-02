@@ -1,0 +1,3 @@
+---
+# defaults for containerd role
+containerd_version: "latest"

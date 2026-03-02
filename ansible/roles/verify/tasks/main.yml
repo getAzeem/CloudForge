@@ -1,0 +1,22 @@
+---
+# run a couple of kubectl commands to ensure the cluster is operational
+- name: Verify cluster nodes are present
+  ansible.builtin.command:
+    cmd: kubectl get nodes
+  register: nodes_check
+
+- name: Verify all pods across namespaces
+  ansible.builtin.command:
+    cmd: kubectl get pods -A
+  register: pods_check
+
+# fail the play if either command returned a non-zero exit code
+- name: Fail if node check failed
+  ansible.builtin.fail:
+    msg: "kubectl get nodes failed"
+  when: nodes_check.rc != 0
+
+- name: Fail if pod check failed
+  ansible.builtin.fail:
+    msg: "kubectl get pods -A failed"
+  when: pods_check.rc != 0

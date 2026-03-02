@@ -1,0 +1,9 @@
+---
+# default variables for the common role
+common_packages:
+  - curl
+  - apt-transport-https
+  - ca-certificates
+  - software-properties-common
+  - gnupg
+  - lsb-release

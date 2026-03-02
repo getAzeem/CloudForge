@@ -1,0 +1,39 @@
+---
+# add the Kubernetes apt key so we can trust the packages
+- name: Add Kubernetes apt key
+  ansible.builtin.apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+# add the Kubernetes apt repository
+- name: Add Kubernetes apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+    state: present
+    filename: kubernetes
+
+# install kubelet, kubeadm and kubectl packages
+- name: Install kubelet, kubeadm and kubectl
+  ansible.builtin.apt:
+    name:
+      - kubelet={{ kube_version }}
+      - kubeadm={{ kube_version }}
+      - kubectl={{ kube_version }}
+    state: present
+    update_cache: yes
+
+# hold the packages to prevent unintended upgrades
+- name: Hold Kubernetes packages at current version
+  ansible.builtin.apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: hold
+
+# ensure kubelet is enabled so it starts on boot
+- name: Ensure kubelet service is enabled
+  ansible.builtin.service:
+    name: kubelet
+    enabled: yes
+    state: started

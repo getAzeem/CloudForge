@@ -1,0 +1,4 @@
+# No external roles are required for this project.  All logic lives under
+# the `roles/` directory in this repository.
+# If you wish to consume Galaxy roles in the future, add them here and run
+# `ansible-galaxy install -r requirements.yml`.

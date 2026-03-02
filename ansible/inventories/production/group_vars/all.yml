@@ -1,0 +1,7 @@
+# Global variables for every host in the inventory.
+# Override these in more specific group_vars files if required.
+
+ansible_python_interpreter: /usr/bin/python3
+
+# network settings used by kubeadm init
+kube_pod_network_cidr: "192.168.0.0/16"

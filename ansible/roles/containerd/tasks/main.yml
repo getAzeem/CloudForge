@@ -1,0 +1,61 @@
+---
+# Ensure Docker's GPG key is installed so we can add the official repo
+- name: Add Docker GPG apt key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+# Add Docker apt repository (required for the containerd.io package)
+- name: Add Docker apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+    state: present
+    filename: docker
+
+# install containerd; the package comes from the Docker repo added above
+- name: Install containerd.io package
+  ansible.builtin.apt:
+    name: containerd.io
+    state: present
+    update_cache: yes
+
+# ensure configuration directory exists
+- name: Create /etc/containerd directory
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+# generate default config and write to file (overwrites on every run)
+# the command output is captured so that we can modify it below
+- name: Generate default containerd configuration
+  ansible.builtin.command: containerd config default
+  register: containerd_default_config
+  changed_when: false
+
+- name: Write containerd config.toml
+  ansible.builtin.copy:
+    dest: /etc/containerd/config.toml
+    content: "{{ containerd_default_config.stdout }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart containerd
+
+# ensure the SystemdCgroup option is enabled, which kubeadm requires
+- name: Enable SystemdCgroup in containerd config
+  ansible.builtin.lineinfile:
+    path: /etc/containerd/config.toml
+    regexp: '^\s*SystemdCgroup\s*='
+    line: '            SystemdCgroup = true'
+    backrefs: yes
+  notify: Restart containerd
+
+# make sure the containerd service is running and enabled on boot
+- name: Ensure containerd is started and enabled
+  ansible.builtin.service:
+    name: containerd
+    state: started
+    enabled: yes

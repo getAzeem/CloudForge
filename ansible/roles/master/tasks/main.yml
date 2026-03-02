@@ -1,0 +1,5 @@
+---
+# master role pulls in the sub‑tasks in the defined order
+- import_tasks: init.yml
+- import_tasks: calico.yml
+- import_tasks: nginx.yml

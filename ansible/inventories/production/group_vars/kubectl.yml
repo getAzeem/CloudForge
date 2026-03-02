@@ -1,0 +1,2 @@
+# Variables for the kubectl (Jenkins) server node.
+# This host acts as the control station for running kubectl commands.

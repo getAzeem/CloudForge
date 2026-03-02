@@ -1,0 +1,8 @@
+---
+# common configuration applied to every host before any role-specific logic
+- hosts: all
+  become: yes
+  roles:
+    - common
+    - containerd
+    - kubeadm

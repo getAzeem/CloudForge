@@ -1,0 +1,18 @@
+---
+# join a worker node to the already-initialized control plane
+- name: Check for existing kubelet configuration
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_conf
+
+- name: Reset any partial cluster state
+  ansible.builtin.command:
+    cmd: kubeadm reset -f
+  when: not kubelet_conf.stat.exists
+
+- name: Join the cluster using token provided by master
+  ansible.builtin.command:
+    cmd: "{{ hostvars[groups['master'][0]].join_command }} --cri-socket unix:///run/containerd/containerd.sock"
+  when: not kubelet_conf.stat.exists
+  register: join_result
+  changed_when: join_result.rc == 0
