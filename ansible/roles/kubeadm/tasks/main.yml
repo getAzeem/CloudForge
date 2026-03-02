@@ -1,39 +1,66 @@
 ---
-# add the Kubernetes apt key so we can trust the packages
-- name: Add Kubernetes apt key
-  ansible.builtin.apt_key:
-    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-    state: present
 
-# add the Kubernetes apt repository
-- name: Add Kubernetes apt repository
-  ansible.builtin.apt_repository:
-    repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
-    state: present
-    filename: kubernetes
+# Kubernetes installation role
+# Stable kubeadm installation for Ubuntu 22.04 / 24.04
+# Pipeline-safe and idempotent
 
-# install kubelet, kubeadm and kubectl packages
-- name: Install kubelet, kubeadm and kubectl
-  ansible.builtin.apt:
+
+- name: Install required packages
+  apt:
     name:
-      - kubelet={{ kube_version }}
-      - kubeadm={{ kube_version }}
-      - kubectl={{ kube_version }}
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
     state: present
     update_cache: yes
 
-# hold the packages to prevent unintended upgrades
-- name: Hold Kubernetes packages at current version
-  ansible.builtin.apt:
+
+- name: Remove old Kubernetes keyring
+  file:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    state: absent
+
+
+- name: Remove old Kubernetes repo
+  file:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    state: absent
+
+
+- name: Install Kubernetes apt key
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | apt-key add -
+
+
+- name: Add Kubernetes repository
+  copy:
+    dest: /etc/apt/sources.list.d/kubernetes.list
+    content: |
+      deb https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /
+
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+
+- name: Install Kubernetes packages
+  apt:
     name:
       - kubelet
       - kubeadm
       - kubectl
-    state: hold
+    state: present
 
-# ensure kubelet is enabled so it starts on boot
-- name: Ensure kubelet service is enabled
-  ansible.builtin.service:
+
+- name: Hold Kubernetes packages
+  command: apt-mark hold kubelet kubeadm kubectl
+  changed_when: false
+
+
+- name: Enable kubelet
+  service:
     name: kubelet
     enabled: yes
     state: started

@@ -1,0 +1,118 @@
+{
+  "Proxy_server_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "32.192.188.131"
+  },
+  "association_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "rtbassoc-0a51e7754214d7adb"
+  },
+  "internet_gateway_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "igw-0d596a6a8bda5f9ac"
+  },
+  "master_instance_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "i-0698805c73336a09c"
+  },
+  "master_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "44.205.23.25"
+  },
+  "master_private_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "10.0.1.83"
+  },
+  "master_public_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "44.205.23.25"
+  },
+  "public-route-table-id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "rtb-0e30641fdb96ed087"
+  },
+  "public_nacl_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "acl-0b8a59dd1d3218ca2"
+  },
+  "public_sg_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "sg-02ef7ae5c6f1fa2b8"
+  },
+  "public_subnet_ids": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string"
+      ]
+    ],
+    "value": [
+      "subnet-074b626e21fba7215"
+    ]
+  },
+  "route_table_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:ec2:us-east-1:263701503062:route-table/rtb-0e30641fdb96ed087"
+  },
+  "vpc_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "vpc-078b15c4c44cd8550"
+  },
+  "worker_ips": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "44.195.80.81",
+      "44.215.105.193"
+    ]
+  },
+  "worker_node_1_instance_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "i-04ae2e6cd9435f7ba"
+  },
+  "worker_node_1_private_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "10.0.1.80"
+  },
+  "worker_node_1_public_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "44.195.80.81"
+  },
+  "worker_node_2_instance_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "i-0c9de25280a32c331"
+  },
+  "worker_node_2_private_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "10.0.1.53"
+  },
+  "worker_node_2_public_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "44.215.105.193"
+  }
+}

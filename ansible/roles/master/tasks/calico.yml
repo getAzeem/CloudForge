@@ -1,13 +1,14 @@
 ---
-# install Calico only if it is not already present
-- name: Check for Calico pods in kube-system namespace
-  ansible.builtin.command:
-    cmd: kubectl get pods -n kube-system
-  register: calico_check
-  failed_when: false
 
-- name: Apply Calico manifest
-  ansible.builtin.command:
-    cmd: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-  when: calico_check.stdout is not regex_search('calico')
+- name: Wait for API server to become ready
+  command: kubectl get nodes
+  register: api_ready
+  retries: 20
+  delay: 15
+  until: api_ready.rc == 0
+  changed_when: false
+
+
+- name: Install Calico network plugin
+  command: kubectl apply --validate=false -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/calico.yaml
   changed_when: true

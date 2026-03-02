@@ -1,7 +1,18 @@
 ---
-# deploy the NGINX ingress controller using the official manifest
-# applying the manifest is idempotent so it is safe to run every time
+
+# Install NGINX Ingress Controller
+# Uses kubeconfig explicitly to avoid localhost:8080 errors
+
+- name: Check if ingress-nginx namespace exists
+  command: kubectl get namespace ingress-nginx --kubeconfig=/etc/kubernetes/admin.conf
+  register: ingress_check
+  failed_when: false
+  changed_when: false
+
+
 - name: Install NGINX Ingress Controller
-  ansible.builtin.command:
-    cmd: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.3.0/deploy/static/provider/cloud/deploy.yaml
-  changed_when: true
+  command: >
+    kubectl apply
+    -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.3.0/deploy/static/provider/cloud/deploy.yaml
+    --kubeconfig=/etc/kubernetes/admin.conf
+  when: ingress_check.rc != 0

@@ -1,10 +1,13 @@
 ---
-# initialize the control plane if it has not already been done
+
+# Check if cluster already initialized
 - name: Check for existing kube admin.conf
   ansible.builtin.stat:
     path: /etc/kubernetes/admin.conf
   register: kubeadmin_conf
 
+
+# Initialize control plane only if not initialized
 - name: Run kubeadm init to bootstrap the control plane
   ansible.builtin.command: >
     kubeadm init --pod-network-cidr={{ kube_pod_network_cidr }}
@@ -13,6 +16,16 @@
   args:
     creates: /etc/kubernetes/admin.conf
 
+- name: Wait for API server
+  command: kubectl get nodes
+  register: api_ready
+  retries: 20
+  delay: 15
+  until: api_ready.rc == 0
+  changed_when: false
+
+
+# Create kube directory for ubuntu user
 - name: Ensure .kube directory for ubuntu user
   ansible.builtin.file:
     path: /home/ubuntu/.kube
@@ -20,8 +33,9 @@
     owner: ubuntu
     group: ubuntu
     mode: '0755'
-  when: not kubeadmin_conf.stat.exists
 
+
+# Copy kubeconfig from master node
 - name: Copy admin.conf to ubuntu user's kubeconfig
   ansible.builtin.copy:
     src: /etc/kubernetes/admin.conf
@@ -29,16 +43,17 @@
     owner: ubuntu
     group: ubuntu
     mode: '0644'
-  when: not kubeadmin_conf.stat.exists
+    remote_src: yes
 
+
+# Generate join command (always run so workers can join)
 - name: Generate worker join command
   ansible.builtin.command:
     cmd: kubeadm token create --print-join-command
   register: join_command
-  when: not kubeadmin_conf.stat.exists
 
-# make the join command available as a host fact for other roles
+
+# Share join command with other hosts
 - name: Set join_command fact
   ansible.builtin.set_fact:
     join_command: "{{ join_command.stdout }}"
-  when: join_command is defined
