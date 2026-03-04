@@ -1,10 +1,6 @@
 pipeline {
 
-    agent any
-
-    environment {
-        KUBECONFIG = "/home/azeem/.kube/config"
-    }
+    agent { label 'k8-worker' }
 
     stages {
 
@@ -14,13 +10,20 @@ pipeline {
             }
         }
 
-        stage('Verify Kubectl Access') {
+        stage('Verify Cluster Access') {
             steps {
                 sh '''
-                echo "Using kubeconfig:"
-                echo $KUBECONFIG
-                kubectl config get-contexts
+                echo "Checking Kubernetes access..."
                 kubectl get nodes
+                '''
+            }
+        }
+
+        stage('Cleanup Old Deployment') {
+            steps {
+                sh '''
+                echo "Deleting old microservices..."
+                kubectl delete -R -f k8s/ --ignore-not-found=true
                 '''
             }
         }
@@ -36,7 +39,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Product Catalog Service') {
+        stage('Deploy Product Catalog') {
             steps {
                 sh '''
                 kubectl apply -f k8s/productcatalogservice/namespace.yml
@@ -157,7 +160,6 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
-                kubectl get nodes
                 kubectl get pods -A
                 kubectl get svc -A
                 '''
