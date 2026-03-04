@@ -3,7 +3,7 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = "${HOME}/.kube/config"
+        KUBECONFIG = "/home/azeem/.kube/config"
     }
 
     stages {
@@ -14,16 +14,12 @@ pipeline {
             }
         }
 
-        stage('Verify Kubectl') {
-            steps {
-                sh 'kubectl version --client'
-            }
-        }
-
-        stage('Use Kind Cluster') {
+        stage('Verify Kubectl Access') {
             steps {
                 sh '''
-                kubectl config use-context kind-kind
+                echo "Using kubeconfig:"
+                echo $KUBECONFIG
+                kubectl config get-contexts
                 kubectl get nodes
                 '''
             }
