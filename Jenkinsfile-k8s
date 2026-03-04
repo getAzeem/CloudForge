@@ -1,0 +1,163 @@
+pipeline {
+
+```
+agent any
+
+stages {
+
+    stage('Checkout Repository') {
+        steps {
+            checkout scm
+        }
+    }
+
+    stage('Verify Kubectl') {
+        steps {
+            sh 'kubectl version --client'
+        }
+    }
+
+    stage('Deploy Redis') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/redis/namespace.yml
+            kubectl apply -f k8s/redis/pv.yml
+            kubectl apply -f k8s/redis/statefulset.yml
+            kubectl apply -f k8s/redis/service.yml
+            '''
+        }
+    }
+
+    stage('Deploy Product Catalog Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/productcatalogservice/namespace.yml
+            kubectl apply -f k8s/productcatalogservice/configmap.yml
+            kubectl apply -f k8s/productcatalogservice/deployment.yml
+            kubectl apply -f k8s/productcatalogservice/service.yml
+            '''
+        }
+    }
+
+    stage('Deploy Currency Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/currencyservice/namespace.yml
+            kubectl apply -f k8s/currencyservice/configmap.yml
+            kubectl apply -f k8s/currencyservice/deployment.yml
+            kubectl apply -f k8s/currencyservice/service.yml
+            kubectl apply -f k8s/currencyservice/hpa.yml
+            '''
+        }
+    }
+
+    stage('Deploy Email Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/emailservice/namespace.yml
+            kubectl apply -f k8s/emailservice/configmap.yml
+            kubectl apply -f k8s/emailservice/deployment.yml
+            kubectl apply -f k8s/emailservice/service.yml
+            kubectl apply -f k8s/emailservice/hpa.yml
+            '''
+        }
+    }
+
+    stage('Deploy Shipping Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/shippingservice/namespace.yml
+            kubectl apply -f k8s/shippingservice/configmap.yml
+            kubectl apply -f k8s/shippingservice/deployment.yml
+            kubectl apply -f k8s/shippingservice/service.yml
+            kubectl apply -f k8s/shippingservice/hpa.yml
+            '''
+        }
+    }
+
+    stage('Deploy Payment Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/paymentservice/namespace.yml
+            kubectl apply -f k8s/paymentservice/configmap.yml
+            kubectl apply -f k8s/paymentservice/deployment.yml
+            kubectl apply -f k8s/paymentservice/service.yml
+            kubectl apply -f k8s/paymentservice/hpa.yml
+            '''
+        }
+    }
+
+    stage('Deploy Cart Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/cartservice/namespace.yml
+            kubectl apply -f k8s/cartservice/configmap.yml
+            kubectl apply -f k8s/cartservice/deployment.yml
+            kubectl apply -f k8s/cartservice/service.yml
+            '''
+        }
+    }
+
+    stage('Deploy Recommendation Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/recommendationservice/namespace.yml
+            kubectl apply -f k8s/recommendationservice/configmap.yml
+            kubectl apply -f k8s/recommendationservice/deployment.yml
+            kubectl apply -f k8s/recommendationservice/service.yml
+            kubectl apply -f k8s/recommendationservice/hpa.yml
+            '''
+        }
+    }
+
+    stage('Deploy Checkout Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/checkoutservice/namespace.yml
+            kubectl apply -f k8s/checkoutservice/configmap.yml
+            kubectl apply -f k8s/checkoutservice/deployment.yml
+            kubectl apply -f k8s/checkoutservice/service.yml
+            kubectl apply -f k8s/checkoutservice/hpa.yml
+            '''
+        }
+    }
+
+    stage('Deploy Ad Service') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/adservice/namespace.yml
+            kubectl apply -f k8s/adservice/configmap.yml
+            kubectl apply -f k8s/adservice/deployment.yml
+            kubectl apply -f k8s/adservice/service.yml
+            kubectl apply -f k8s/adservice/hpa.yml
+            '''
+        }
+    }
+
+    stage('Deploy Frontend') {
+        steps {
+            sh '''
+            kubectl apply -f k8s/frontend/namespace.yml
+            kubectl apply -f k8s/frontend/configmap.yml
+            kubectl apply -f k8s/frontend/deployment.yml
+            kubectl apply -f k8s/frontend/service.yml
+            kubectl apply -f k8s/frontend/ingress.yml
+            '''
+        }
+    }
+
+    stage('Verify Deployment') {
+        steps {
+            sh '''
+            kubectl get nodes
+            kubectl get pods -A
+            kubectl get svc -A
+            '''
+        }
+    }
+
+}
+```
+
+}
+
