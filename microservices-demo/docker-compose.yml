@@ -1,62 +1,93 @@
-version: "3.8"
-
 services:
 
-redis-cart:
-image: redis:alpine
-ports:
-- "6379:6379"
+  redis-cart:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
-adservice:
-build: ./src/adservice
-ports:
-- "9555:9555"
+  adservice:
+    build: ./src/adservice
+    environment:
+      - PORT=9555
 
-cartservice:
-build: ./src/cartservice
-depends_on:
-- redis-cart
+  cartservice:
+    build: ./src/cartservice/src
+    environment:
+      - REDIS_ADDR=redis-cart:6379
+    depends_on:
+      - redis-cart
 
-checkoutservice:
-build: ./src/checkoutservice
-depends_on:
-- cartservice
-- paymentservice
-- shippingservice
-- emailservice
-- productcatalogservice
-- currencyservice
+  checkoutservice:
+    build: ./src/checkoutservice
+    environment:
+      - PRODUCT_CATALOG_SERVICE_ADDR=productcatalogservice:3550
+      - SHIPPING_SERVICE_ADDR=shippingservice:50051
+      - PAYMENT_SERVICE_ADDR=paymentservice:50051
+      - EMAIL_SERVICE_ADDR=emailservice:8080
+      - CURRENCY_SERVICE_ADDR=currencyservice:7000
+      - CART_SERVICE_ADDR=cartservice:7070
+    depends_on:
+      - cartservice
+      - paymentservice
+      - shippingservice
+      - emailservice
+      - productcatalogservice
+      - currencyservice
 
-currencyservice:
-build: ./src/currencyservice
+  currencyservice:
+    build: ./src/currencyservice
+    environment:
+      - PORT=7000
+      - ENABLE_PROFILER=false
+      - DISABLE_PROFILER=true
 
-emailservice:
-build: ./src/emailservice
+  emailservice:
+    build: ./src/emailservice
+    environment:
+      - PORT=8080
 
-paymentservice:
-build: ./src/paymentservice
+  paymentservice:
+    build: ./src/paymentservice
+    environment:
+      - PORT=50051
+      - ENABLE_PROFILER=false
 
-productcatalogservice:
-build: ./src/productcatalogservice
+  productcatalogservice:
+    build: ./src/productcatalogservice
+    environment:
+      - PORT=3550
 
-recommendationservice:
-build: ./src/recommendationservice
-depends_on:
-- productcatalogservice
+  recommendationservice:
+    build: ./src/recommendationservice
+    environment:
+      - PRODUCT_CATALOG_SERVICE_ADDR=productcatalogservice:3550
+    depends_on:
+      - productcatalogservice
 
-shippingservice:
-build: ./src/shippingservice
+  shippingservice:
+    build: ./src/shippingservice
+    environment:
+      - PORT=50051
 
-frontend:
-build: ./src/frontend
-ports:
-- "8080:8080"
-depends_on:
-- adservice
-- cartservice
-- checkoutservice
-- currencyservice
-- productcatalogservice
-- recommendationservice
-- shippingservice
-
+  frontend:
+    build: ./src/frontend
+    ports:
+      - "8081:8080"
+    environment:
+      - PRODUCT_CATALOG_SERVICE_ADDR=productcatalogservice:3550
+      - CURRENCY_SERVICE_ADDR=currencyservice:7000
+      - CART_SERVICE_ADDR=cartservice:7070
+      - RECOMMENDATION_SERVICE_ADDR=recommendationservice:8080
+      - SHIPPING_SERVICE_ADDR=shippingservice:50051
+      - CHECKOUT_SERVICE_ADDR=checkoutservice:5050
+      - AD_SERVICE_ADDR=adservice:9555
+      - SHOPPING_ASSISTANT_SERVICE_ADDR=localhost:9999
+    depends_on:
+      - adservice
+      - cartservice
+      - checkoutservice
+      - currencyservice
+      - productcatalogservice
+      - recommendationservice
+      - shippingservice
+      

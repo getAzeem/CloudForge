@@ -1,113 +1,63 @@
 pipeline {
 
-```
-agent any
+    agent any
 
-options {
-    timestamps()
-}
-
-environment {
-
-    GIT_BRANCH = "main"
-
-    IMAGE_NAMESPACE = "myselfazeem"
-
-    // Jenkins credential: Username + Password (Docker access token)
-    DOCKER_CREDS = credentials('docker-credentials')
-
-    SERVICES = "frontend cartservice productcatalogservice currencyservice paymentservice shippingservice emailservice checkoutservice recommendationservice adservice"
-
-}
-
-stages {
-
-    stage('Checkout') {
-        steps {
-            checkout scm
-            sh 'git fetch origin'
-        }
+    options {
+        timestamps()
     }
 
-    stage('Detect Changed Services') {
+    environment {
 
-        steps {
+        GIT_BRANCH = "main"
 
-            script {
+        IMAGE_NAMESPACE = "myselfazeem"
 
-                def changedFiles = sh(
-                    script: "git diff origin/${GIT_BRANCH}...HEAD --name-only || true",
-                    returnStdout: true
-                ).trim()
+        DOCKER_BUILDKIT = "1"
 
-                echo "Changed Files:"
-                echo changedFiles
+        // Jenkins credential: Username + Password (Docker access token)
+        DOCKER_CREDS = credentials('docker-credentials')
 
-                def changedServices = []
+        SERVICES = "frontend cartservice productcatalogservice currencyservice paymentservice shippingservice emailservice checkoutservice recommendationservice adservice"
 
-                SERVICES.split().each { svc ->
-                    if (changedFiles.contains("src/${svc}/")) {
-                        changedServices.add(svc)
-                    }
-                }
+    }
 
-                env.CHANGED_SERVICES = changedServices.join(" ")
+    stages {
 
-                if (env.CHANGED_SERVICES == "") {
-                    echo "No service changes detected."
-                } else {
-                    echo "Changed Services: ${env.CHANGED_SERVICES}"
-                }
-
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh 'git fetch --all'
             }
-
         }
 
-    }
+        stage('Detect Changed Services') {
 
-    stage('Unit Tests') {
+            steps {
 
-        when {
-            expression { env.CHANGED_SERVICES?.trim() }
-        }
+                script {
 
-        steps {
+                    def changedFiles = sh(
+                        script: "git diff origin/${GIT_BRANCH}...HEAD --name-only || true",
+                        returnStdout: true
+                    ).trim()
 
-            script {
+                    echo "Changed Files:"
+                    echo changedFiles
 
-                env.CHANGED_SERVICES.split().each { svc ->
+                    def changedServices = []
 
-                    echo "Running unit tests for ${svc}"
+                    SERVICES.split().each { svc ->
+                        if (changedFiles.contains("src/${svc}/")) {
+                            changedServices.add(svc)
+                        }
+                    }
 
-                    dir("src/${svc}") {
+                    env.CHANGED_SERVICES = changedServices.join(" ")
 
-                        sh '''
-
-                        set -e
-
-                        if [ -f package.json ]; then
-                            npm install
-                            npm test
-
-                        elif [ -f go.mod ]; then
-                            go test ./...
-
-                        elif [ -f requirements.txt ]; then
-                            pip install -r requirements.txt
-                            pytest || true
-
-                        elif ls *.csproj 1> /dev/null 2>&1; then
-                            dotnet test
-
-                        elif [ -f pom.xml ]; then
-                            mvn test
-
-                        else
-                            echo "No unit tests configured."
-                        fi
-
-                        '''
-
+                    if (env.CHANGED_SERVICES == "") {
+                        echo "No service changes detected."
+                    } else {
+                        echo "Changed Services: ${env.CHANGED_SERVICES}"
                     }
 
                 }
@@ -116,90 +66,148 @@ stages {
 
         }
 
-    }
+        stage('Unit Tests') {
 
-    stage('Integration Tests') {
+            when {
+                expression { env.CHANGED_SERVICES?.trim() }
+            }
 
-        when {
-            expression { env.CHANGED_SERVICES?.trim() }
-        }
+            steps {
 
-        steps {
+                script {
 
-            echo "Running integration tests..."
+                    env.CHANGED_SERVICES.split().each { svc ->
 
-            sh '''
+                        echo "Running unit tests for ${svc}"
 
-            set -e
+                        dir("src/${svc}") {
 
-            docker compose -f docker-compose.yml up -d
+                            sh '''
 
-            echo "Waiting for services to start..."
-            sleep 25
+                            set -e
 
-            echo "Checking frontend health..."
+                            if [ -f package.json ]; then
+                                npm install
+                                npm test
 
-            curl -f http://localhost:8080
+                            elif [ -f go.mod ]; then
+                                go test ./...
 
-            docker compose down
+                            elif [ -f requirements.txt ]; then
+                                pip install -r requirements.txt
+                                pytest || true
 
-            '''
+                            elif ls *.csproj 1> /dev/null 2>&1; then
+                                dotnet test
 
-        }
+                            elif [ -f pom.xml ]; then
+                                mvn test
 
-    }
+                            else
+                                echo "No unit tests configured."
+                            fi
 
-    stage('Docker Login') {
+                            '''
 
-        steps {
-
-            sh '''
-            echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin
-            '''
-
-        }
-
-    }
-
-    stage('Build and Push Images') {
-
-        when {
-            expression { env.CHANGED_SERVICES?.trim() }
-        }
-
-        steps {
-
-            script {
-
-                def builds = [:]
-
-                env.CHANGED_SERVICES.split().each { svc ->
-
-                    builds[svc] = {
-
-                        def versionTag = "v${BUILD_NUMBER}"
-
-                        sh """
-
-                        set -e
-
-                        echo "Building Docker image for ${svc}"
-
-                        docker build -t ${IMAGE_NAMESPACE}/${svc}:${versionTag} src/${svc}
-
-                        docker tag ${IMAGE_NAMESPACE}/${svc}:${versionTag} ${IMAGE_NAMESPACE}/${svc}:latest
-
-                        docker push ${IMAGE_NAMESPACE}/${svc}:${versionTag}
-
-                        docker push ${IMAGE_NAMESPACE}/${svc}:latest
-
-                        """
+                        }
 
                     }
 
                 }
 
-                parallel builds
+            }
+
+        }
+
+        stage('Integration Tests') {
+
+            when {
+                expression { env.CHANGED_SERVICES?.trim() }
+            }
+
+            steps {
+
+                echo "Running integration tests..."
+
+                sh '''
+
+                set -e
+
+                docker compose down || true
+
+                docker compose -f docker-compose.yml up -d
+
+                echo "Waiting for services to start..."
+                sleep 30
+
+                echo "Checking frontend health..."
+
+                curl -f http://localhost:8081
+
+                docker compose down
+
+                '''
+
+            }
+
+        }
+
+        stage('Docker Login') {
+
+            steps {
+
+                sh '''
+                echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin
+                '''
+
+            }
+
+        }
+
+        stage('Build and Push Images') {
+
+            when {
+                expression { env.CHANGED_SERVICES?.trim() }
+            }
+
+            steps {
+
+                script {
+
+                    def builds = [:]
+
+                    env.CHANGED_SERVICES.split().each { svc ->
+
+                        builds[svc] = {
+
+                            def versionTag = "v${BUILD_NUMBER}"
+
+                            sh """
+
+                            set -e
+
+                            echo "Building Docker image for ${svc}"
+
+                            if [ "${svc}" = "cartservice" ]; then
+                                docker build -t ${IMAGE_NAMESPACE}/${svc}:${versionTag} src/cartservice/src
+                            else
+                                docker build -t ${IMAGE_NAMESPACE}/${svc}:${versionTag} src/${svc}
+                            fi
+
+                            docker tag ${IMAGE_NAMESPACE}/${svc}:${versionTag} ${IMAGE_NAMESPACE}/${svc}:latest
+
+                            docker push ${IMAGE_NAMESPACE}/${svc}:${versionTag}
+                            docker push ${IMAGE_NAMESPACE}/${svc}:latest
+
+                            """
+
+                        }
+
+                    }
+
+                    parallel builds
+
+                }
 
             }
 
@@ -207,23 +215,20 @@ stages {
 
     }
 
-}
+    post {
 
-post {
+        success {
+            echo "CI pipeline completed successfully."
+        }
 
-    success {
-        echo "CI pipeline completed successfully."
+        failure {
+            echo "Pipeline failed. Check logs."
+        }
+
+        always {
+            sh 'docker logout || true'
+        }
+
     }
-
-    failure {
-        echo "Pipeline failed. Check logs."
-    }
-
-    always {
-        sh 'docker logout || true'
-    }
-
-}
-```
 
 }
