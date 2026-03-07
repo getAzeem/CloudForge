@@ -13,8 +13,8 @@ environment {
 
     IMAGE_NAMESPACE = "myselfazeem"
 
-    DOCKER_USERNAME = credentials('docker-username')
-    DOCKER_TOKEN    = credentials('docker-token')
+    // Jenkins credential: Username + Password (Docker access token)
+    DOCKER_CREDS = credentials('docker-credentials')
 
     SERVICES = "frontend cartservice productcatalogservice currencyservice paymentservice shippingservice emailservice checkoutservice recommendationservice adservice"
 
@@ -25,6 +25,7 @@ stages {
     stage('Checkout') {
         steps {
             checkout scm
+            sh 'git fetch origin'
         }
     }
 
@@ -35,7 +36,7 @@ stages {
             script {
 
                 def changedFiles = sh(
-                    script: "git diff origin/${GIT_BRANCH}...HEAD --name-only",
+                    script: "git diff origin/${GIT_BRANCH}...HEAD --name-only || true",
                     returnStdout: true
                 ).trim()
 
@@ -52,10 +53,10 @@ stages {
 
                 env.CHANGED_SERVICES = changedServices.join(" ")
 
-                echo "Changed Services: ${env.CHANGED_SERVICES}"
-
                 if (env.CHANGED_SERVICES == "") {
-                    echo "No service code changed."
+                    echo "No service changes detected."
+                } else {
+                    echo "Changed Services: ${env.CHANGED_SERVICES}"
                 }
 
             }
@@ -67,7 +68,7 @@ stages {
     stage('Unit Tests') {
 
         when {
-            expression { env.CHANGED_SERVICES != "" }
+            expression { env.CHANGED_SERVICES?.trim() }
         }
 
         steps {
@@ -81,6 +82,8 @@ stages {
                     dir("src/${svc}") {
 
                         sh '''
+
+                        set -e
 
                         if [ -f package.json ]; then
                             npm install
@@ -100,7 +103,7 @@ stages {
                             mvn test
 
                         else
-                            echo "No tests configured"
+                            echo "No unit tests configured."
                         fi
 
                         '''
@@ -118,7 +121,7 @@ stages {
     stage('Integration Tests') {
 
         when {
-            expression { env.CHANGED_SERVICES != "" }
+            expression { env.CHANGED_SERVICES?.trim() }
         }
 
         steps {
@@ -127,13 +130,16 @@ stages {
 
             sh '''
 
+            set -e
+
             docker compose -f docker-compose.yml up -d
 
+            echo "Waiting for services to start..."
             sleep 25
 
             echo "Checking frontend health..."
 
-            curl -f http://localhost:8080 || exit 1
+            curl -f http://localhost:8080
 
             docker compose down
 
@@ -148,9 +154,7 @@ stages {
         steps {
 
             sh '''
-
-            echo $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
-
+            echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin
             '''
 
         }
@@ -160,7 +164,7 @@ stages {
     stage('Build and Push Images') {
 
         when {
-            expression { env.CHANGED_SERVICES != "" }
+            expression { env.CHANGED_SERVICES?.trim() }
         }
 
         steps {
@@ -177,7 +181,9 @@ stages {
 
                         sh """
 
-                        echo "Building image for ${svc}"
+                        set -e
+
+                        echo "Building Docker image for ${svc}"
 
                         docker build -t ${IMAGE_NAMESPACE}/${svc}:${versionTag} src/${svc}
 
@@ -211,6 +217,10 @@ post {
 
     failure {
         echo "Pipeline failed. Check logs."
+    }
+
+    always {
+        sh 'docker logout || true'
     }
 
 }
