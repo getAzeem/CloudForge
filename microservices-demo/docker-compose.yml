@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+
+redis-cart:
+image: redis:alpine
+ports:
+- "6379:6379"
+
+adservice:
+build: ./src/adservice
+ports:
+- "9555:9555"
+
+cartservice:
+build: ./src/cartservice
+depends_on:
+- redis-cart
+
+checkoutservice:
+build: ./src/checkoutservice
+depends_on:
+- cartservice
+- paymentservice
+- shippingservice
+- emailservice
+- productcatalogservice
+- currencyservice
+
+currencyservice:
+build: ./src/currencyservice
+
+emailservice:
+build: ./src/emailservice
+
+paymentservice:
+build: ./src/paymentservice
+
+productcatalogservice:
+build: ./src/productcatalogservice
+
+recommendationservice:
+build: ./src/recommendationservice
+depends_on:
+- productcatalogservice
+
+shippingservice:
+build: ./src/shippingservice
+
+frontend:
+build: ./src/frontend
+ports:
+- "8080:8080"
+depends_on:
+- adservice
+- cartservice
+- checkoutservice
+- currencyservice
+- productcatalogservice
+- recommendationservice
+- shippingservice
+
