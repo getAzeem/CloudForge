@@ -1,0 +1,219 @@
+pipeline {
+
+```
+agent any
+
+options {
+    timestamps()
+}
+
+environment {
+
+    GIT_BRANCH = "main"
+
+    IMAGE_NAMESPACE = "myselfazeem"
+
+    DOCKER_USERNAME = credentials('docker-username')
+    DOCKER_TOKEN    = credentials('docker-token')
+
+    SERVICES = "frontend cartservice productcatalogservice currencyservice paymentservice shippingservice emailservice checkoutservice recommendationservice adservice"
+
+}
+
+stages {
+
+    stage('Checkout') {
+        steps {
+            checkout scm
+        }
+    }
+
+    stage('Detect Changed Services') {
+
+        steps {
+
+            script {
+
+                def changedFiles = sh(
+                    script: "git diff origin/${GIT_BRANCH}...HEAD --name-only",
+                    returnStdout: true
+                ).trim()
+
+                echo "Changed Files:"
+                echo changedFiles
+
+                def changedServices = []
+
+                SERVICES.split().each { svc ->
+                    if (changedFiles.contains("src/${svc}/")) {
+                        changedServices.add(svc)
+                    }
+                }
+
+                env.CHANGED_SERVICES = changedServices.join(" ")
+
+                echo "Changed Services: ${env.CHANGED_SERVICES}"
+
+                if (env.CHANGED_SERVICES == "") {
+                    echo "No service code changed."
+                }
+
+            }
+
+        }
+
+    }
+
+    stage('Unit Tests') {
+
+        when {
+            expression { env.CHANGED_SERVICES != "" }
+        }
+
+        steps {
+
+            script {
+
+                env.CHANGED_SERVICES.split().each { svc ->
+
+                    echo "Running unit tests for ${svc}"
+
+                    dir("src/${svc}") {
+
+                        sh '''
+
+                        if [ -f package.json ]; then
+                            npm install
+                            npm test
+
+                        elif [ -f go.mod ]; then
+                            go test ./...
+
+                        elif [ -f requirements.txt ]; then
+                            pip install -r requirements.txt
+                            pytest || true
+
+                        elif ls *.csproj 1> /dev/null 2>&1; then
+                            dotnet test
+
+                        elif [ -f pom.xml ]; then
+                            mvn test
+
+                        else
+                            echo "No tests configured"
+                        fi
+
+                        '''
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+    stage('Integration Tests') {
+
+        when {
+            expression { env.CHANGED_SERVICES != "" }
+        }
+
+        steps {
+
+            echo "Running integration tests..."
+
+            sh '''
+
+            docker compose -f docker-compose.yml up -d
+
+            sleep 25
+
+            echo "Checking frontend health..."
+
+            curl -f http://localhost:8080 || exit 1
+
+            docker compose down
+
+            '''
+
+        }
+
+    }
+
+    stage('Docker Login') {
+
+        steps {
+
+            sh '''
+
+            echo $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
+
+            '''
+
+        }
+
+    }
+
+    stage('Build and Push Images') {
+
+        when {
+            expression { env.CHANGED_SERVICES != "" }
+        }
+
+        steps {
+
+            script {
+
+                def builds = [:]
+
+                env.CHANGED_SERVICES.split().each { svc ->
+
+                    builds[svc] = {
+
+                        def versionTag = "v${BUILD_NUMBER}"
+
+                        sh """
+
+                        echo "Building image for ${svc}"
+
+                        docker build -t ${IMAGE_NAMESPACE}/${svc}:${versionTag} src/${svc}
+
+                        docker tag ${IMAGE_NAMESPACE}/${svc}:${versionTag} ${IMAGE_NAMESPACE}/${svc}:latest
+
+                        docker push ${IMAGE_NAMESPACE}/${svc}:${versionTag}
+
+                        docker push ${IMAGE_NAMESPACE}/${svc}:latest
+
+                        """
+
+                    }
+
+                }
+
+                parallel builds
+
+            }
+
+        }
+
+    }
+
+}
+
+post {
+
+    success {
+        echo "CI pipeline completed successfully."
+    }
+
+    failure {
+        echo "Pipeline failed. Check logs."
+    }
+
+}
+```
+
+}
